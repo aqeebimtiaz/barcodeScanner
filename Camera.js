@@ -5,76 +5,26 @@ import {
     TouchableOpacity,
     View,
     Alert,
-    Text,
-    TextInput,
-    Image,
-    PermissionsAndroid
+    TextInput
 } from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import LZString from 'lz-string';
 
-import RNFS from "react-native-fs";
-
-const path = RNFS.DocumentDirectoryPath + '/image.jpg';
 export default class Camera extends Component {
     constructor() {
         super();
         this.state = {
             barcode: '',
-            takingPic: false,
-            uri: '',
+            takingPic: false
         };
-        this.requestStoragePermission();
     }
-
-    async requestStoragePermission() {
-        try {
-            const granted = await PermissionsAndroid.requestMultiple(
-                [
-                    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-                    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                    PermissionsAndroid.PERMISSIONS.CAMERA,
-                    PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-                ],
-                {
-                    title: 'Cool Photo App Storage Permission',
-                    message:
-                        'Cool Photo App needs access to your storage so you can take awesome pictures.',
-                    buttonNeutral: 'Ask Me Later',
-                    buttonNegative: 'Cancel',
-                    buttonPositive: 'OK',
-                }
-            );
-            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                console.log('You can use the camera');
-            } else {
-                console.log('Camera permission denied');
-            }
-        } catch (err) {
-            console.warn(err);
-        }
-    }
-
-    storeData = async (key, value) => {
-        try {
-            await AsyncStorage.setItem(key, value);
-        } catch (e) {
-            // saving error
-            console.log(e);
-        }
-    };
 
     takePicture = async () => {
         if (this.camera && !this.state.takingPic) {
             let options = {
-                base64: true,
                 quality: 0.85,
                 fixOrientation: true,
-                forceUpOrientation: true,
-                // exif: true,
-                path: path,
+                forceUpOrientation: true
             };
 
             this.setState({ takingPic: true });
@@ -82,17 +32,6 @@ export default class Camera extends Component {
             try {
                 const data = await this.camera.takePictureAsync(options);
                 Alert.alert('Success', JSON.stringify(data));
-                this.setState({ uri: data.base64 });
-                this.storeData('base64', data.base64);
-                let compressed = LZString.compress(data.base64);
-                this.storeData('compressedB64', compressed);
-
-                let decompressed = LZString.decompress(compressed);
-                this.storeData('decompressedB64', decompressed);
-
-                console.log('Size of sample is: ' + data.base64.length);
-                console.log('Size of compressed is: ' + compressed.length);
-                console.log('Size of decompressed is: ' + decompressed.length);
                 // this.props.onPicture(data);
             } catch (err) {
                 Alert.alert(
@@ -145,7 +84,6 @@ export default class Camera extends Component {
             });
     }
     render() {
-        // console.log(this.state.uri);
         return (
             <>
                 <View style={styles.container}>
@@ -155,7 +93,7 @@ export default class Camera extends Component {
                         }}
                         style={styles.preview}
                         type={RNCamera.Constants.Type.back}
-                        flashMode={RNCamera.Constants.FlashMode.auto}
+                        flashMode={RNCamera.Constants.FlashMode.off}
                         whiteBalance={RNCamera.Constants.WhiteBalance.auto}
                         androidCameraPermissionOptions={{
                             title: 'Permission to use camera',
@@ -171,6 +109,14 @@ export default class Camera extends Component {
                             buttonPositive: 'Ok',
                             buttonNegative: 'Cancel'
                         }}
+                        // onGoogleVisionBarcodesDetected={({ barcodes }) => {
+                        //     console.log(barcodes);
+                        //     this.setState({ barcode: barcodes[0].data });
+                        //     console.log(
+                        //         'from raw barcode ' + this.state.barcode
+                        //     );
+                        //     Alert.alert('Barcode', barcodes[0].data);
+                        // }}
                     >
                         <TouchableOpacity
                             activeOpacity={0.5}
@@ -180,21 +126,52 @@ export default class Camera extends Component {
                             <Icon name="camera" size={50} color="#fff" />
                         </TouchableOpacity>
                     </RNCamera>
-                    <View style={styles.imagePreview}>
-                        {this.state.uri !== '' ? (
-                            <Image
-                                source={{
-                                    isStatic: true,
-                                    uri: `data:image/jpeg;base64,${
-                                        this.state.uri
-                                    }`
-                                }}
-                                resizeMode="contain"
-                                resizeMethod="resize"
+                    <View
+                        style={{
+                            flex: 0,
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            alignContent: 'center',
+                            height: '15%',
+                            paddingHorizontal: 20
+                        }}
+                    >
+                        <View
+                            style={{
+                                flex: 1,
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                alignContent: 'center'
+                            }}
+                        >
+                            <TextInput
+                                style={styles.searchInput}
+                                value={this.state.barcode}
+                                onChangeText={barcode =>
+                                    this.setState({ barcode })
+                                }
                             />
-                        ) : (
-                            <Text>URI is empty</Text>
-                        )}
+                        </View>
+
+                        <TouchableOpacity
+                            onPress={this.getProduct.bind(this)}
+                            style={styles.capture}
+                        >
+                            <Icon
+                                style={{
+                                    marginTop: 'auto',
+                                    marginBottom: 'auto'
+                                }}
+                                name="cloud-search"
+                                size={25}
+                                color="#fff"
+                            />
+                        </TouchableOpacity>
+
+                        {/* <TouchableOpacity onPress={this.takePicture.bind(this)} style={styles.capture}>
+                            <Text style={{ fontSize: 14 }}> SNAP </Text>
+                            <Icon style = {{marginTop: 'auto', marginBottom: 'auto'}} name="cloud-search" size={25} color="#fff" />
+                        </TouchableOpacity> */}
                     </View>
                 </View>
             </>
@@ -205,16 +182,37 @@ export default class Camera extends Component {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignContent: 'center'
+        flexDirection: 'column'
         // backgroundColor: '#3366cc',
     },
     preview: {
         flex: 1,
-        flexDirection: 'column',
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
         alignItems: 'center'
+    },
+    capture: {
+        flex: 0,
+        backgroundColor: '#3366cc',
+        borderRadius: 5,
+        padding: 5,
+        paddingHorizontal: 20,
+        alignSelf: 'center',
+        // margin: 5,
+        height: '50%'
+    },
+    searchInput: {
+        width: '90%',
+        height: '50%',
+        borderBottomWidth: 3,
+        padding: 4,
+        marginRight: 5,
+        // marginTop: 5,
+        fontSize: 18,
+        // borderWidth: 1,
+        borderColor: '#3366cc',
+        borderRadius: 8,
+        color: 'black'
+        // backgroundColor: '#3366cc',
     },
     btnAlignment: {
         flex: 1,
@@ -222,13 +220,5 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
         alignItems: 'center',
         marginBottom: 20
-    },
-    imagePreview: {
-        // flex: 1,
-        // flexDirection: 'column',
-        // justifyContent: 'center',
-        // alignContent: 'center',
-        height: '15%',
-        padding: 20,
     },
 });
