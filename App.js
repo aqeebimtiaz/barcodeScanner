@@ -66,11 +66,12 @@ export default class App extends Component {
                             buttonNegative: 'Cancel',
                         }}
                         onGoogleVisionBarcodesDetected={({ barcodes }) => {
-                            console.log(barcodes);
+                            console.log('barcodes', barcodes);
                             this.setState({barcode: barcodes[0].data});
                             console.log('from raw barcode ' + this.state.barcode);
-                            Alert.alert('Barcode', barcodes[0].data);
+                            // Alert.alert('Barcode', barcodes[0].data);
                         }}
+                        googleVisionBarcodeType={RNCamera.Constants.GoogleVisionBarcodeDetection.BarcodeType.ALL}
                     >
                         <BarcodeMask edgeColor={'#62B1F6'} showAnimatedLine={true} transparency={0.8}/>
                     </RNCamera>
