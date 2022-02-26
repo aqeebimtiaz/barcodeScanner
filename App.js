@@ -63,9 +63,13 @@ export default class App extends Component {
                     zIndex: 999,
                     // right: 0,
                     // bottom: 50,
+                    backgroundColor: 'rgb(0, 0, 0)',
+                    opacity: 0.6
                 }}
-                >
-                <Text>{elem.value}</Text>
+            >
+                <Text style={{ color: '#fff', opacity: 1 }}>
+                    {elem.value}
+                </Text>
             </View>
         );
     }
