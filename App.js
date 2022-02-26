@@ -2,7 +2,7 @@
 /* eslint-disable react-native/no-inline-styles */
 'use strict';
 import React, { Component } from 'react';
-import { AppRegistry, StyleSheet, TouchableOpacity, View, StatusBar, Alert, TextInput } from 'react-native';
+import { AppRegistry, StyleSheet, TouchableOpacity, View, StatusBar, Alert, TextInput, Text } from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import BarcodeMask from 'react-native-barcode-mask';
@@ -12,6 +12,8 @@ export default class App extends Component {
         super();
         this.state = {
             barcode : '',
+            canDetectText: true,
+            textBlocks: [],
         };
     }
 
@@ -40,7 +42,42 @@ export default class App extends Component {
             }
         });
     }
+    textRecognized = object => {
+        const { textBlocks } = object;
+        this.setState({ textBlocks });
+    };
+    renderTextBlock = (elem, index) => {
+        // console.log(elem);
+        return (
+            <View
+                key={index}
+                style={{
+                    borderWidth: 1,
+                    borderColor: 'blue',
+                    position: 'absolute',
+                    left: elem.bounds.origin.x,
+                    top: elem.bounds.origin.y,
+                    height: elem.bounds.size.height,
+                    width: elem.bounds.size.width,
+                    // padding: 5,
+                    zIndex: 999,
+                    // right: 0,
+                    // bottom: 50,
+                }}
+                >
+                <Text>{elem.value}</Text>
+            </View>
+        );
+    }
+    renderTextBlocks = () => (
+        <View style={styles.facesContainer} pointerEvents="none">
+            {
+                this.state.textBlocks.map((elem, index) => this.renderTextBlock(elem, index))
+            }
+        </View>
+    );
     render() {
+        const { canDetectText } = this.state;
         return (
             <>
                 <StatusBar backgroundColor="grey" barStyle="light-content" showHideTransition='slide' animated hidden={false} />
@@ -72,8 +109,10 @@ export default class App extends Component {
                             // Alert.alert('Barcode', barcodes[0].data);
                         }}
                         googleVisionBarcodeType={RNCamera.Constants.GoogleVisionBarcodeDetection.BarcodeType.ALL}
+                        onTextRecognized={canDetectText ? this.textRecognized : null}
                     >
-                        <BarcodeMask edgeColor={'#62B1F6'} showAnimatedLine={true} transparency={0.8}/>
+                        {!!canDetectText && this.renderTextBlocks()}
+                        {/* <BarcodeMask edgeColor={'#62B1F6'} showAnimatedLine={true} transparency={0.8}/> */}
                     </RNCamera>
                     <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center', alignContent: 'center', height: '15%', paddingHorizontal: 20 }}>
                         <View style={{flex: 1, flexDirection: 'column', justifyContent: 'center', alignContent: 'center'}}>
@@ -128,6 +167,11 @@ const styles = StyleSheet.create({
         // margin: 5,
         height: '50%',
     },
+    facesContainer:{
+        height: '100%',
+        width: '100%',
+        zIndex: 10,
+    },
     searchInput: {
         width: '90%',
         height: '50%',
@@ -141,6 +185,13 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         color: 'black',
         // backgroundColor: '#3366cc',
+    },
+    boundingRect: {
+        position: "absolute",
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 0.75,
+        borderColor: "#FF6600"
     },
 });
 
